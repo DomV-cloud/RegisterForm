@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fragment+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vee-validate@<3.0.0/dist/vee-validate.js"></script>
+
+
+
+    <title>Registrace</title>
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
+</head>
+<body class="bg-light">
+
+<div id="app" class="container" style="display: flex;
+    width: 100%;
+    height: 100vh;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+
+">
+
+  <div class="form-student" style=" width: 70%;
+    height: 70vh;
+    border-radius: 24px;
+    border-radius: 24px;
+background: white-light;
+box-shadow:  16px -16px 32px #8d878c,
+             -16px 16px 32px #bab8b8;
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    align-items: center;
+border:5px solid black;
+"
+
+  >
+
+    <div class="left-side" style=" margin-left: 10px;
+    height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: left;">
+      <h2 style="align-self: center;
+color: black;
+font-size: 1.3vw;">Registrační formulář</h2>
+      <form @submit.prevent="onSubmit">
+
+        <label for="name" style=" font-size:1vw;" >Jméno</label><br>
+
+        <input style="height:3vh; width:10vw" type="text" ref="name" v-model="student.name" id="name" required autofocus><br>
+        <span style="color:red;" class="error" v-if="student.name && !isValidName">  Name invalid</span>
+
+        <br></br>
+
+        <label style="font-size:1vw;" for="can_swim" required>Umíte plavat?</label><br>
+        <input type="checkbox" v-model="student.can_swim" id="can_swim" required><br><br>
+
+        <label style="font-size:1vw;" for="partner">S kým chcete být na lodi?</label><br>
+
+        <input style="height:3vh; width:10vw" type="text" ref="partner" v-model="student.partner" id="partner">
+        <br>
+        <span style="color:red;" v-if="student.partner && !isValidPartner"> Partner name invalid</span>
+        <br><br>
+
+        <section style=" display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;">
+          <input style=" height: 5vh;
+    width: 8vw;
+    background: #264bd0;
+    border: none;
+    color: #DBDBDF;
+    border-radius: 6px;" type="submit" value="submit">
+          <a href="/index.html" style="text-decoration: none;
+    height: 5vh;
+    width: 8vw;
+    text-align: center;
+    font-size: 1.1vw;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    border-radius: 6px;">
+
+            <span>Back</span>
+
+          </a>
+        </section>
+
+      </form>
+    </div>
+
+    <div style="height: 50vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+
+
+" class="list-students">
+      <h2 style=" font-size: 1.3vw; margin-left:20px; color: black;">Žáci, co jedou na plavecký kurz</h2>
+      <ul>
+        <li style="list-style: none;
+    width: 100%;" class="student" v-for="(student, index) in students" :key="index">
+
+
+              <div style="
+              width: 100%;
+              font-size: 1vw;
+
+">
+                        {{ student.name }} &
+                        {{ student.partner }},
+                        {{ student.can_swim ? "Can Swim" : "Can't swim" }}
+                    </div>
+
+
+
+        </li>
+      </ul>
+
+
+
+    </div>
+
+  </div>
+
+
+</div>
+<p> </p>
+
+<script>
+  const app = new Vue({
+            el: '#app',
+            data: {
+                student: {
+                    name: '',
+                    can_swim: false,
+                    partner: ''
+                },
+                students: [],
+            },
+            methods: {
+                onSubmit() {
+                    if(!this.isValid) return;
+
+                    const url = '/students/new';
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.student)
+                    }).then(resp => resp.ok && resp.json())
+                        .then(data => {
+                            if (data) {
+                                this.students.push(data);
+                                this.student = {
+                                    name: '',
+                                    can_swim: false,
+                                    partner: ''
+                                };
+                                this.$refs.name.focus();
+                            } else {
+                                this.$refs.name.select();
+                            }
+                        });
+                },
+                loadStudents() {
+                    const url = '/students';
+                    return fetch(url)
+                        .then(resp => resp.ok && resp.json())
+                        .then(data => { return data || []});
+                }
+            },
+            computed: {
+                isValidName() {
+                    return this.student.name
+                            && 2 <= this.student.name.length
+                            && this.student.name.length <= 8
+                            && this.student.name.match(/^[A-Za-z]+[0-9]*$/);
+                },
+                isValidPartner() {
+                    return this.student.partner
+                            && 2 <= this.student.partner.length
+                            && this.student.partner.length <= 8
+                            && this.student.partner.match(/^[A-Za-z]+[0-9]*$/);
+                },
+                isValid() {
+                    return this.isValidName && this.isValidPartner;
+                }
+            },
+            async created() {
+                this.students = await this.loadStudents();
+            }
+        });
+
+</script>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+</body>
+
+<footer>
+        <a href="https://github.com/">Did you find a bug? </a>
+
+    </footer>
+</html>
